@@ -32,7 +32,7 @@ type Store struct {
 func NewStore(base string) (*Store, error) {
 	opt := badger.DefaultOptions(base)
 	opt.TableLoadingMode = options.LoadToRAM
-	opt.ValueLogLoadingMode = options.MemoryMap
+	opt.ValueLogLoadingMode = options.FileIO
 	opt.SyncWrites = true
 	opt.Logger = loggers.NewBadgerLogger(log)
 	db, err := badger.Open(opt)
