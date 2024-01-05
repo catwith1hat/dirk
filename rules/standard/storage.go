@@ -31,13 +31,21 @@ type Store struct {
 // NewStore creates a new badger store.
 func NewStore(base string) (*Store, error) {
 	opt := badger.DefaultOptions(base)
+	var db *badger.DB
+	var err error
 	opt.TableLoadingMode = options.LoadToRAM
 	opt.ValueLogLoadingMode = options.MemoryMap
 	opt.SyncWrites = true
 	opt.Logger = loggers.NewBadgerLogger(log)
-	db, err := badger.Open(opt)
+
+	db, err = badger.Open(opt)
 	if err != nil {
-		return nil, err
+		// Fallback for systems that don't support mmap.
+		opt.ValueLogLoadingMode = options.FileIO
+		db, err = badger.Open(opt)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// Garbage collect in the background on start.
