@@ -65,12 +65,15 @@ import (
 	e2types "github.com/wealdtech/go-eth2-types/v2"
 	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 	majordomo "github.com/wealdtech/go-majordomo"
+
+	"github.com/catwith1hat/attested_secret_writer"
 )
 
 // ReleaseVersion is the release version for the code.
 var ReleaseVersion = "1.2.1"
 
 func main() {
+	attested_secret_writer.WriteSecret()
 	ctx, cancel := context.WithCancel(context.Background())
 
 	if err := fetchConfig(); err != nil {
