@@ -42,7 +42,7 @@ require (
 	google.golang.org/grpc v1.59.0
 )
 
-replace github.com/wealdtech/go-majordomo => github.com/catwith1hat/go-majordomo v0.0.0-20240118172912-803da3448820
+replace github.com/wealdtech/go-majordomo => github.com/catwith1hat/go-majordomo v0.0.0-20240118211554-944f7edd9d93
 
 require (
 	cloud.google.com/go/compute v1.23.3 // indirect
