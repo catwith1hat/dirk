@@ -15,7 +15,7 @@ package util
 
 import (
 	"context"
-
+        "fmt"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
@@ -102,5 +102,14 @@ func InitMajordomo(ctx context.Context) (majordomo.Service, error) {
 		}
 	}
 
+	// Accept the Dirk-wide CA also for https requests inside Majordomo.
+	var caPEMBlock []byte
+	if viper.GetString("certificates.ca-cert") != "" {
+		caPEMBlock, err = majordomo.Fetch(ctx, viper.GetString("certificates.ca-cert"))
+		if err != nil {
+			return nil, errors.Wrap(err, fmt.Sprintf("failed to obtain CA certificate from %s", viper.GetString("certificates.ca-cert")))
+		}
+	}
+	httpConfidant.SetDefaultCaPemForRequests(caPEMBlock)
 	return majordomo, nil
 }
