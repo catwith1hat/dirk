@@ -22,6 +22,7 @@ import (
 	"github.com/attestantio/dirk/rules"
 	"github.com/attestantio/dirk/services/checker"
 	"github.com/attestantio/dirk/services/ruler"
+	"github.com/attestantio/dirk/util"
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
@@ -36,6 +37,7 @@ func (s *Service) SignBeaconAttestation(
 	core.Result,
 	[]byte,
 ) {
+	util.Delay("SignBeaconAttestation", credentials.Client, pubKey, data.Slot)
 	started := time.Now()
 
 	if credentials == nil {

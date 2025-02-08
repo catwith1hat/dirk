@@ -20,6 +20,7 @@ import (
 
 	"github.com/attestantio/dirk/core"
 	"github.com/attestantio/dirk/rules"
+	"github.com/attestantio/dirk/util"
 	"github.com/attestantio/dirk/services/checker"
 	"github.com/attestantio/dirk/services/ruler"
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
@@ -38,6 +39,7 @@ func (s *Service) SignBeaconProposal(
 	core.Result,
 	[]byte,
 ) {
+	util.Delay("SignBeaconProposal", credentials.Client, pubKey, data.Slot)
 	ctx, span := otel.Tracer("attestantio.dirk.services.signer.standard").Start(ctx, "SignBeaconProposal")
 	defer span.End()
 	started := time.Now()

@@ -55,6 +55,9 @@ func (s *Service) SignBeaconAttestations(
 
 		return results, nil
 	}
+	// Take slot from data[0]. The dirk eth wallet implementation guarantees that slot is the same for all request
+	// https://github.com/wealdtech/go-eth2-wallet-dirk/tree/263190301ef3352fbda43f91363145f175a12cf6/grpc.go#L729
+	util.Delay("SignBeaconAttestations", credentials.Client, nil, data[0].Slot)
 
 	results := make([]core.Result, len(data))
 	for i := range results {
