@@ -40,6 +40,7 @@ func ClientInfoInterceptor() grpc.UnaryServerInterceptor {
 			peerCerts := authState.PeerCertificates
 			if len(peerCerts) > 0 {
 				peerCert := peerCerts[0]
+				//util.GetCNameMemory().Refresh(peerCert.Subject.CommonName)
 				newCtx = context.WithValue(ctx, &ClientName{}, peerCert.Subject.CommonName)
 			}
 		}
