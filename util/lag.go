@@ -2,8 +2,11 @@ package util
 
 import (
 	"fmt"
+	"os"
 	"slices"
+	"strings"
 	"sort"
+	"sync"
 	"time"
 )
 
@@ -15,11 +18,47 @@ import (
 // something from which we can infer the chain and therefore the slot
 // timings? I do think so...
 
-func slotTimeForClient(cname string, slot uint64) time.Time {
-	if cname == "n4-i0" {
-		return slotTimeHolesky(slot)
-	}
-	return slotTimeMainnet(slot)
+var (
+	rankOnce sync.Once
+	cnameRank map[string]int
+)
+
+func getCnameRank() map[string]int {
+	rankOnce.Do(func() {
+		cnameRank = make(map[string]int)
+
+		order := os.Getenv("CNAME_ORDER")
+		if order != "" {
+			for idx, cname := range strings.Split(order, ":") {
+				cnameRank[cname] = idx
+			}
+			// Dump the final map for inspection (runs only once).
+			fmt.Printf("CNAME_ORDER parsed: %+v\n", cnameRank)
+		} else {
+			fmt.Printf("CNAME_ORDER not set; defaulting to lexicographic sort\n")
+		}
+	})
+	return cnameRank
+}
+
+
+func SortCnames(activeCnames []string) {
+	ranks := getCnameRank()
+	sort.Slice(activeCnames, func(i, j int) bool {
+		ri, inI := ranks[activeCnames[i]]
+		rj, inJ := ranks[activeCnames[j]]
+
+		switch {
+		case inI && inJ:
+			return ri < rj
+		case inI:
+			return true
+		case inJ:
+			return false
+		default:
+			return activeCnames[i] < activeCnames[j]
+		}
+	})
 }
 
 
@@ -43,20 +82,11 @@ func Delay(action string, cname string, pubkey []byte, slot uint64) {
 	cNameMemory := GetCNameMemory()
 	cNameMemory.Refresh(cname)
 	activeCnames := cNameMemory.GetAllActive()
-	// fmt.Printf("Presort: activeCnames=%v\n", activeCnames)
-	sort.Slice(activeCnames, func(i, j int) bool {
-		// FIXME: Should be configurable somehow, but
-		// all Dirk instances must arrive at the same
-		// ordering.
-		//
-		// n3-i0 is my best node. Always prefer its
-		// signatures.
-		return activeCnames[i] == "n3-i0" || activeCnames[i] < activeCnames[j] && activeCnames[j] != "n3-i0"
-	})
+	SortCnames(activeCnames)
 	index := slices.Index(activeCnames, cname)
 
 	now := time.Now().UTC()
-	slotT := slotTimeForClient(cname, slot)
+	slotT := slotTime(slot)
 	delta := now.Sub(slotT)
 
 	if index > 0 {
