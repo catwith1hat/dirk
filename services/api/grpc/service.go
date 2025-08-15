@@ -18,6 +18,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"net"
+	"time"
 
 	accountmanagerhandler "github.com/attestantio/dirk/services/api/grpc/handlers/accountmanager"
 	listerhandler "github.com/attestantio/dirk/services/api/grpc/handlers/lister"
@@ -38,6 +39,7 @@ import (
 	"google.golang.org/grpc/credentials"
 	_ "google.golang.org/grpc/encoding/gzip" // Enable GZIP compression.
 	"google.golang.org/grpc/grpclog"
+	"google.golang.org/grpc/keepalive"
 )
 
 // Service provides the features and functions for the GRPC daemon.
@@ -136,6 +138,11 @@ func New(ctx context.Context, params ...Parameter) (*Service, error) {
 func (s *Service) createServer(name string, certPEMBlock []byte, keyPEMBlock []byte, caPEMBlock []byte) error {
 	grpclog.SetLoggerV2(loggers.NewGRPCLoggerV2(log.With().Str("service", "grpc").Logger()))
 
+	keepalive := keepalive.ServerParameters{
+		Time: 12 * time.Second,
+		Timeout: 6 * time.Second,
+	}
+
 	grpcOpts := []grpc.ServerOption{
 		grpc.StatsHandler(otelgrpc.NewServerHandler()),
 		grpc.UnaryInterceptor(
@@ -145,6 +152,7 @@ func (s *Service) createServer(name string, certPEMBlock []byte, keyPEMBlock []b
 				interceptors.SourceIPInterceptor(),
 				interceptors.ClientInfoInterceptor(),
 			)),
+		grpc.KeepaliveParams(keepalive),
 	}
 
 	if name == "" {
